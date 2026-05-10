@@ -3,13 +3,15 @@
 ## Run MCP server
 
 ```bash
-uv run python server.py
+uv run server.py
 ```
 
 ## Run HTTP API (LangGraph)
 
 ```bash
-uv run python api_server.py
+uv run python -m uvicorn src.api.chat:app --host 0.0.0.0 --port 8000 --reload
+
+http://127.0.0.1:8000/docs
 ```
 
 ### Endpoints

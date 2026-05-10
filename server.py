@@ -4,7 +4,7 @@ import uvicorn
 from datetime import datetime
 from mcp.server.fastmcp import FastMCP
 
-from src.tools import register_discounting_tools
+from src.tools import register_discounting_tools, register_schema1_tools
 
 
 # Configure logging
@@ -21,6 +21,7 @@ logging.basicConfig(
 # Create MCP server
 mcp = FastMCP("Forfaiting-Multi-Agent Server")
 register_discounting_tools(mcp)
+register_schema1_tools(mcp)
 
 app = mcp.sse_app()
 
