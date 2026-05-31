@@ -1,7 +1,7 @@
 [project]
 name = "forfaiting-multi-agent"
 version = "0.1.0"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.14"
 
 dependencies = [
     "fastapi>=0.111.0",
@@ -12,5 +12,8 @@ dependencies = [
     "langchain-google-genai>=4.2.1",
     "python-dotenv>=1.2.2",
     "langchain>=1.2.15",
-    "langchain-mcp-adapters>=0.1.0"
+    "langchain-mcp-adapters>=0.1.0",
+    "streamlit>=1.57.0",
+    "httpx>=0.28.1",
+    "watchdog>=4.0.0",
 ]

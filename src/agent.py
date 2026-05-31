@@ -1,36 +1,31 @@
-from langchain_mcp_adapters.client import MultiServerMCPClient
-from langchain.agents import create_agent
-from src.llm import get_llm_client
-from src.prompts.orchestrator_prompt import orchestrator_prompt
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 
-_client = None
-_agent = None
+from src.agents.factory import get_specialist
+from src.graph.supervisor import get_graph
 
-
-async def _get_agent():
-    global _client, _agent
-    if _agent is not None:
-        return _agent
-
-    _client = MultiServerMCPClient(
-        {
-            "forfaiting": {
-                "transport": "sse",
-                "url": "http://127.0.0.1:8080/sse",
-            }
-        }
-    )
-    tools = await _client.get_tools()
-    llm = get_llm_client()
-    _agent = create_agent(
-        model=llm,
-        tools=tools,
-        system_prompt=orchestrator_prompt,
-    )
-    return _agent
+ChatTurn = dict[str, str]
 
 
-async def ask_agent(user_message: str) -> str:
-    agent = await _get_agent()
-    result = await agent.ainvoke({"messages": [("user", user_message)]})
+def history_to_messages(history: list[ChatTurn]) -> list[BaseMessage]:
+    messages: list[BaseMessage] = []
+    for turn in history:
+        if turn["role"] == "user":
+            messages.append(HumanMessage(content=turn["content"]))
+        elif turn["role"] == "assistant":
+            messages.append(AIMessage(content=turn["content"]))
+    return messages
+
+
+async def ask_agent(user_message: str, history: list[ChatTurn] | None = None) -> str:
+    graph = await get_graph()
+    messages = history_to_messages(history or [])
+    messages.append(HumanMessage(content=user_message))
+    result = await graph.ainvoke({"messages": messages})
+    return result["messages"][-1].content
+
+
+async def ask_orchestrate(user_message: str) -> str:
+    """Discounting-only path (manager shortcut for straight / yield requests)."""
+    agent = await get_specialist("discounting")
+    result = await agent.ainvoke({"messages": [HumanMessage(content=user_message)]})
     return result["messages"][-1].content

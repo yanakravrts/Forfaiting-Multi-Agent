@@ -1,5 +1,7 @@
 # Forfaiting-Multi-Agent
 
+Requires **Python 3.11–3.13** (`uv sync` uses `.python-version`). LangChain is not compatible with Python 3.14 yet.
+
 ## Run MCP server
 
 ```bash
@@ -16,7 +18,24 @@ http://127.0.0.1:8000/docs
 
 ### Endpoints
 
-- `POST /orchestrate` - manager endpoint that selects one discounting tool
+- `POST /chat` - LangGraph supervisor (auto-routes to a specialist)
+- `POST /orchestrate` - discounting specialist only
+
+Compare routes (via `/chat`):
+- **schema_compare** — Scheme 1 + Scheme 2 in parallel, then synthesis node
+- **discount_compare** — straight discount + discount-to-yield in parallel, then synthesis
+
+## Run Streamlit chat UI
+
+With MCP server running:
+
+```bash
+uv run streamlit run streamlit_app.py
+```
+
+Optional: enable **Use HTTP API** in the sidebar if you prefer calling FastAPI instead of in-process agents.
+
+Set `FORFAITING_API_URL` (default `http://127.0.0.1:8000`) when using API mode.
 
 ### Discounting formulas
 

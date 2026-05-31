@@ -2,26 +2,26 @@ import logging
 
 
 def register_schema1_tools(mcp: object) -> None:
-    @mcp.tool("calculate_schema1_schedule")
-    def calculate_schema1_schedule(
+    @mcp.tool("generate_schema1_schedule")
+    def generate_schema1_schedule(
         principal: float,   # P
-        rate: float,        # i (за період, у відсотках або десятковому вигляді)
+        rate_i: float,        # i (за період, у відсотках або десятковому вигляді)
         periods: int,       # n
-        round_to: int = 2,  
+        round_to: int = 6,  
     ) -> dict:
         logging.info(
-            "[TOOL_CALL] calculate_schema1_schedule | principal=%s | rate=%s | periods=%s | round_to=%s",
-            principal, rate, periods,round_to,
+            "[TOOL_CALL] generate_schema1_schedule | principal=%s | rate_i=%s | periods=%s | round_to=%s",
+            principal, rate_i, periods,round_to,
         )
 
         if principal <= 0:
             raise ValueError("principal must be > 0")
         if periods <= 0:
             raise ValueError("periods must be > 0")
-        if rate < 0:
-            raise ValueError("rate must be >= 0")
+        if rate_i < 0:
+            raise ValueError("rate i must be >= 0")
 
-        rate_decimal = rate / 100 if rate > 1 else rate
+        rate_decimal = rate_i / 100 if rate_i > 1 else rate_i
 
         principal_payment = principal / periods
         rows: list[dict] = []
@@ -47,7 +47,7 @@ def register_schema1_tools(mcp: object) -> None:
             total_nominal += nominal_value
 
             logging.info(
-                "[TOOL_ITEM] calculate_schema1_schedule | t=%s | interest=%s | principal=%s | nominal=%s",
+                "[TOOL_ITEM] generate_schema1_schedule | t=%s | interest=%s | principal=%s | nominal=%s",
                 t,
                 interest_payment,
                 principal_payment,
@@ -69,7 +69,7 @@ def register_schema1_tools(mcp: object) -> None:
         }
 
         logging.info(
-            "[TOOL_RESULT] calculate_schema1_schedule | totals=%s | rows_count=%s",
+            "[TOOL_RESULT] generate_schema1_schedule | totals=%s | rows_count=%s",
             result["totals"],
             len(rows),
         )
@@ -93,7 +93,7 @@ def register_schema1_tools(mcp: object) -> None:
         if rate_i < 0:
             raise ValueError("rate_i must be >= 0")
         if rate_d < 0:
-            raise ValueError("rste_d must be >= 0")
+            raise ValueError("rate_d must be >= 0")
 
         i = rate_i / 100 if rate_i > 1 else rate_i
         d = rate_d / 100 if rate_d > 1 else rate_d
@@ -112,15 +112,15 @@ def register_schema1_tools(mcp: object) -> None:
         return result
 
 
-    @mcp.tool("calculate_schema1_schedule_with_z1")
-    def calculate_schema1_schedule_with_z1(
+    @mcp.tool("generate_schema1_schedule_with_z1")
+    def generate_schema1_schedule_with_z1(
         principal: float,
         rate_i: float,
         periods: int,
         z1: float,
         round_to: int = 6,
     ) -> dict:
-        logging.info("[TOOL_CALL] calculate_schema1_schedule_with_z1 | principal=%s | rate_i=%s |periods=%s | z1=%s | round_to=%s",
+        logging.info("[TOOL_CALL] generate_schema1_schedule_with_z1 | principal=%s | rate_i=%s |periods=%s | z1=%s | round_to=%s",
          principal, rate_i, periods, z1, round_to,
         )
 
@@ -129,7 +129,7 @@ def register_schema1_tools(mcp: object) -> None:
         if periods <= 0:
             raise ValueError("periods must be > 0")
         if rate_i < 0:
-            raise ValueError("rate_i must be >= 0")
+            raise ValueError("rate_i must be > 0")
         if z1 <= 0:
             raise ValueError("z1 must be > 0")
 
@@ -178,12 +178,98 @@ def register_schema1_tools(mcp: object) -> None:
         }
 
         logging.info(
-            "[TOOL_RESULT] calculate_schema1_schedule_with_z1 | totals=%s | rows_count=%s",
+            "[TOOL_RESULT] generate_schema1_schedule_with_z1 | totals=%s | rows_count=%s",
             result["totals"],
             len(rows),
         )
         return result
 
+
+    @mcp.tool("calculate_correction_rate_i1")
+    def calculate_correction_rate_i1(
+        periods: int,
+        rate_d: float,
+        round_to: int = 6,
+   ) -> dict:
+        logging.info(
+            "[TOOL_CALL] calculate_correction_rate_i1 | periods=%s | rate_d=%s | round_to=%s",
+            periods, rate_d, round_to,
+        )
+
+        if periods <= 0:
+            raise ValueError("periods must be > 0")
+        if rate_d < 0:
+            raise ValueError("rate d must be > 0")
+
+        d = rate_d / 100 if rate_d > 1 else rate_d
+        n = periods
+
+        i = d/(1-((n+2)*d)/3)
+
+        result = {
+            "periods": periods,
+            "rate_d": d,
+            "rate_i": round(i,round_to),
+        }
+
+        logging.info("[TOOL_RESULT] calculate_correction_rate_i1 | result=%s", result)
+        return result
+
+    
+    @mcp.tool("calculate_current_total_importer_costs_a1")
+    def calculate_current_total_importer_costs_a1(
+        principal: float, # P
+        rate_i: float, # i
+        rate_j: float, 
+        periods: int,
+        z1: float,
+        duration_years: int, # t
+        round_to: int = 6,
+    ) -> dict:
+        logging.info("[TOOL_CALL] calculate_current_total_importer_costs_a1 | principal=%s |  rate_i=%s | rate_j=%s | periods=%s | z1=%s | duration_years=%s | round_to=%s",
+        principal, rate_i, rate_j, periods, z1, duration_years, round_to,
+
+       )
+
+        if periods <= 0:
+            raise ValueError("periods must be > 0")
+        if rate_i < 0:
+            raise ValueError("rate i must be > 0")
+        if rate_j < 0:
+            raise ValueError("rate j must be > 0")
+        if duration_years <0:
+            raise ValueError("duration of years must be > 0")
+
+        i = rate_i / 100 if rate_i > 1 else rate_i
+        j_annual = rate_j / 100 if rate_j > 1 else rate_j
+        n = periods
+
+        if duration_years <= 0 or n % duration_years != 0:
+            raise ValueError("duration_years must divide periods evenly")
+        
+        periods_per_year = n // duration_years
+        j_period = (1 + j_annual) ** (1 / periods_per_year) - 1
+
+        total = 0.0
+        for k in range(1, n+1):
+            numerator_factor = 1 + (n-k+1) * i
+            total += numerator_factor / ((1 + j_period) ** k)
+        
+        a1 = (principal / (n*z1)) * total
+
+        result = {
+            "principal": principal,
+            "rate_i": i,
+            "rate_j": j_period,
+            "rate_j_annual": j_annual,
+            "periods": n,
+            "z1": z1,
+            "duration_years": duration_years,
+            "periods_per_year": periods_per_year,
+            "a1": round(a1, round_to),
+        }
+        logging.info("[TOOL_RESULT] calculate_current_total_importer_costs_a1 | result=%s", result)
+        return result
             
 
 

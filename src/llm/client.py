@@ -3,6 +3,7 @@ from socket import timeout
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 
+
 load_dotenv()
 
 
@@ -13,7 +14,7 @@ def get_llm_client() -> ChatGoogleGenerativeAI:
 
     return ChatGoogleGenerativeAI(
         google_api_key=api_key,
-        model="gemini-2.5-flash",
+        model="gemini-3.1-flash-lite-preview",
         temperature=0.0,
         max_retries=3,
         timeout=120,
